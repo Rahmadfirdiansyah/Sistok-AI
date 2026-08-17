@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sistok": {
+      "command": "node",
+      "args": ["D:\\FILE WEB DASEN\\Sistok-MCP\\index.js"]
+    }
+  }
+}

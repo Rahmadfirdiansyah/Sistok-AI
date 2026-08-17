@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.vue';
+
+@import "@fontsource/inter/index.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/jetbrains-mono/index.css";
+
+@theme {
+  /* Font */
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-raleway: "Raleway", sans-serif;
+  --font-montserrat: "Montserrat", Arial, sans-serif;
+
+  /* Colors */
+  --color-gold: #ad9063;
+  --color-dark: #202020;
+  --color-darker: #2d2d2d;
+
+  /* Z Index */
+  --z-index-99: 99;
+  --z-index-100: 100;
+  --z-index-999: 999;
+  --z-index-1001: 1001;
+  --z-index-1005: 1005;
+  --z-index-9999: 9999;
+  --z-index-999999: 999999;
+
+  /* Animation */
+  --animate-spin-medium: spin 1s linear infinite;
+  --animate-spin-slow: spin 3s linear infinite;
+}
+
+@utility bg-dots-pattern {
+  background-image: radial-gradient(
+    rgba(119, 119, 119, 0.75) 5%,
+    transparent 0
+  );
+}
+
+@utility bg-dots {
+  background-size: 30px 30px;
+}
+
+@utility duration-400 {
+  transition-duration: 400ms;
+}
+
+@utility duration-600 {
+  transition-duration: 600ms;
+}
+
+@utility duration-800 {
+  transition-duration: 800ms;
+}
+
+@utility duration-1500 {
+  transition-duration: 1500ms;
+}
+
+@utility duration-2000 {
+  transition-duration: 2000ms;
+}
+
+@utility tracking-wider-2 {
+  letter-spacing: 0.15em;
+}
+
+@utility tracking-tighter-2 {
+  letter-spacing: -0.08em;
+}
+
