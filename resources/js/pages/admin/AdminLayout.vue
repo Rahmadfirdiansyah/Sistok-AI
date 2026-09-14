@@ -222,7 +222,7 @@
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-            <span v-if="notifCount > 0" class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 border-2 border-white text-white text-[9px] font-bold flex items-center justify-center rounded-full">
+            <span v-if="notifCount > 0" class="absolute -top-0.5 -right-0.5 min-w-[18px]   px-1 bg-red-500 border-2 border-white text-white text-[9px] font-bold flex items-center justify-center rounded-full">
               {{ notifCount }}
             </span>
           </button>
