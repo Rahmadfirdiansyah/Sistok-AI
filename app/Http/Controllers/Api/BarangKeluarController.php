@@ -36,6 +36,7 @@ class BarangKeluarController extends Controller
             'lokasi' => 'required|string',
             'dipakaiOleh' => 'required|string',
             'tujuan' => 'required|string',
+            'jenis_keluar' => 'nullable|string|in:pemakaian,limbah',
             'tanggal' => 'required|date',
             'keterangan' => 'nullable|string',
         ]);
@@ -57,6 +58,7 @@ class BarangKeluarController extends Controller
                 'jumlah' => $request->qty,
                 'dipakai_oleh' => $request->dipakaiOleh,
                 'tujuan' => $request->tujuan,
+                'jenis_keluar' => $request->jenis_keluar ?? 'pemakaian',
                 'keterangan' => $request->keterangan,
                 'user_id' => auth()->id(),
             ]);
@@ -89,6 +91,7 @@ class BarangKeluarController extends Controller
             'lokasi' => 'required|string',
             'dipakaiOleh' => 'required|string',
             'tujuan' => 'required|string',
+            'jenis_keluar' => 'nullable|string|in:pemakaian,limbah',
             'tanggal' => 'required|date',
             'keterangan' => 'nullable|string',
         ]);
@@ -115,6 +118,7 @@ class BarangKeluarController extends Controller
                     'jumlah' => $request->qty,
                     'dipakai_oleh' => $request->dipakaiOleh,
                     'tujuan' => $request->tujuan,
+                    'jenis_keluar' => $request->jenis_keluar ?? 'pemakaian',
                     'keterangan' => $request->keterangan,
                 ]);
 
@@ -139,6 +143,7 @@ class BarangKeluarController extends Controller
                     'jumlah' => $request->qty,
                     'dipakai_oleh' => $request->dipakaiOleh,
                     'tujuan' => $request->tujuan,
+                    'jenis_keluar' => $request->jenis_keluar ?? 'pemakaian',
                     'keterangan' => $request->keterangan,
                 ]);
 
@@ -184,6 +189,7 @@ class BarangKeluarController extends Controller
             'tanggal' => $t->tanggal,
             'dipakaiOleh' => $t->dipakai_oleh ?? '',
             'tujuan' => $t->tujuan ?? '',
+            'jenisKeluar' => $t->jenis_keluar ?? 'pemakaian',
             'keterangan' => $t->keterangan ?? '',
             'petugas' => $t->user->name ?? 'Sistem',
         ];

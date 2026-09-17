@@ -14,7 +14,7 @@
     <transition name="slide-up">
       <div v-if="isOpen" class="ai-chat-window">
         <!-- Header -->
-        <div class="ai-chat-header">
+        <div class="ai-chat-header flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="ai-avatar">🤖</div>
             <div>
@@ -22,6 +22,14 @@
               <p class="text-xs text-indigo-200 m-0">Powered by Google AI Studio</p>
             </div>
           </div>
+          <button v-if="messages.length > 0" @click="clearChat"
+            class="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer border-0 flex items-center gap-1 text-[11px]"
+            title="Bersihkan percakapan & mulai baru">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <span>Reset</span>
+          </button>
         </div>
 
         <!-- Messages Area -->
@@ -143,17 +151,29 @@ export default {
         this.$refs.chatInput?.focus();
       });
     },
+    clearChat() {
+      this.messages = [];
+      this.focusInput();
+    },
     async sendMessage() {
       if (!this.inputText.trim()) return;
       
       const text = this.inputText.trim();
+
+      // Ambil maksimal 4 percakapan sebelumnya sebagai ingatan sementara (multi-turn)
+      const history = this.messages.slice(-4).map(m => ({
+        role: m.isUser ? 'user' : 'model',
+        // Bersihkan tag HTML agar token hemat dan bersih
+        text: m.text ? m.text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : ''
+      })).filter(m => m.text.length > 0);
+
       this.messages.push({ text: text, isUser: true });
       this.inputText = '';
       this.loading = true;
       this.focusInput();
 
       try {
-        const response = await api.post('/ai/parse-chat', { text });
+        const response = await api.post('/ai/parse-chat', { text, history });
         
         if (response.data.success) {
           const data = response.data.data;

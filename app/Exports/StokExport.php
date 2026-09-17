@@ -27,12 +27,20 @@ class StokExport implements FromCollection, WithHeadings, WithMapping, ShouldAut
             $query->whereHas('kategori', fn($q) => $q->where('nama', $this->request->kategori));
         }
 
+        if ($this->request->filled('lokasi')) {
+            $query->whereHas('lokasi', fn($q) => $q->where('nama', $this->request->lokasi));
+        }
+
+        if ($this->request->filled('satuan')) {
+            $query->whereHas('satuan', fn($q) => $q->where('nama', $this->request->satuan));
+        }
+
         if ($this->request->filled('status')) {
             $status = $this->request->status;
-            if ($status === 'kritis') {
-                $query->whereRaw('stok < min_stok / 2');
+            if ($status === 'habis' || $status === 'kritis') {
+                $query->where('stok', '<=', 0);
             } elseif ($status === 'rendah') {
-                $query->whereRaw('stok >= min_stok / 2 AND stok < min_stok');
+                $query->whereRaw('stok > 0 AND stok < min_stok');
             } elseif ($status === 'aman') {
                 $query->whereRaw('stok >= min_stok');
             }
@@ -43,7 +51,7 @@ class StokExport implements FromCollection, WithHeadings, WithMapping, ShouldAut
 
     public function map($barang): array
     {
-        $statusKey = $barang->stok < $barang->min_stok / 2 ? 'Kritis' : ($barang->stok < $barang->min_stok ? 'Rendah' : 'Aman');
+        $statusKey = $barang->stok <= 0 ? 'Habis' : ($barang->stok < $barang->min_stok ? 'Rendah' : 'Aman');
 
         return [
             $barang->kode,

@@ -25,6 +25,7 @@ import BarangKeluar from '@/pages/admin/transaksi/BarangKeluar.vue'
 import LaporanStok       from '@/pages/admin/laporan/LaporanStok.vue'
 import LaporanMasuk      from '@/pages/admin/laporan/LaporanMasuk.vue'
 import LaporanKeluar     from '@/pages/admin/laporan/LaporanKeluar.vue'
+import LaporanLimbah     from '@/pages/admin/laporan/LaporanLimbah.vue'
 import RiwayatTransaksi  from '@/pages/admin/laporan/RiwayatTransaksi.vue'
 
 // Admin — Pengaturan
@@ -58,6 +59,7 @@ const routes = [
             { path: 'laporan-stok',      name: 'admin.laporan-stok',      component: LaporanStok },
             { path: 'laporan-masuk',     name: 'admin.laporan-masuk',     component: LaporanMasuk },
             { path: 'laporan-keluar',    name: 'admin.laporan-keluar',    component: LaporanKeluar },
+            { path: 'laporan-limbah',    name: 'admin.laporan-limbah',    component: LaporanLimbah },
             { path: 'laporan-transaksi', name: 'admin.laporan-transaksi', component: RiwayatTransaksi },
 
             // Pengaturan

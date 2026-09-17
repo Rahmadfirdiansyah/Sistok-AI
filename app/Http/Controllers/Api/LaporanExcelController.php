@@ -9,6 +9,7 @@ use App\Exports\StokExport;
 use App\Exports\MasukExport;
 use App\Exports\KeluarExport;
 use App\Exports\RiwayatTransaksiExport;
+use App\Exports\LimbahExport;
 
 class LaporanExcelController extends Controller
 {
@@ -30,5 +31,10 @@ class LaporanExcelController extends Controller
     public function riwayatTransaksi(Request $request)
     {
         return Excel::download(new RiwayatTransaksiExport($request), 'laporan-riwayat-transaksi-' . date('Ymd') . '.xlsx');
+    }
+
+    public function limbah(Request $request)
+    {
+        return Excel::download(new LimbahExport($request), 'laporan-limbah-' . date('Ymd') . '.xlsx');
     }
 }

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-#[Fillable(['tanggal', 'barang_id', 'lokasi_id', 'jumlah', 'dipakai_oleh', 'tujuan', 'keterangan', 'user_id'])]
+#[Fillable(['tanggal', 'barang_id', 'lokasi_id', 'jumlah', 'dipakai_oleh', 'tujuan', 'jenis_keluar', 'keterangan', 'user_id'])]
 class BarangKeluar extends Model
 {
     public function barang()

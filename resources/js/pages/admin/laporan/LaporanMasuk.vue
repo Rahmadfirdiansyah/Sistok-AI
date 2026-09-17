@@ -144,6 +144,12 @@
 
       <!-- Pagination & info -->
       <div class="flex items-center justify-between px-5 py-3.5 border-t border-gray-100">
+        <select v-model.number="perPage" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 outline-none focus:border-indigo-400 bg-white cursor-pointer">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+        </select>
         <p class="text-xs text-gray-400 m-0">Menampilkan {{ from }}–{{ to }} dari {{ filtered.length }} data</p>
         <div class="flex items-center gap-1">
           <button @click="page--" :disabled="page === 1"
@@ -219,6 +225,7 @@ export default {
     startDate()    { this.page = 1 },
     endDate()      { this.page = 1 },
     filterLokasi() { this.page = 1 },
+    perPage()      { this.page = 1 },
   },
   mounted() {
     this.fetchData()

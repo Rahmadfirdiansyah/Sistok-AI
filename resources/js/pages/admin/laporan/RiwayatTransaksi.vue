@@ -104,7 +104,7 @@
             </div>
             <div class="flex items-center gap-1.5 truncate">
               <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span class="truncate">{{ t.oleh_tujuan }} • {{ t.petugas }}</span>
+              <span class="truncate">{{ t.oleh_tujuan }}</span>
             </div>
           </div>
           
@@ -115,7 +115,7 @@
         </div>
       </div>
 
-      <!-- Desktop Table -->
+      <!-- Desktop Table View (Hidden on mobile/tablet) -->
       <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
@@ -127,13 +127,12 @@
               <th class="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Lokasi</th>
               <th class="text-center px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Jumlah</th>
               <th class="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Pemakai/Tujuan/Keterangan</th>
-              <th class="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Petugas</th>
               <th class="text-center px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-if="paginated.length === 0 && !loading">
-              <td colspan="9" class="text-center py-12 text-gray-400 text-sm">Tidak ada transaksi ditemukan.</td>
+              <td colspan="8" class="text-center py-12 text-gray-400 text-sm">Tidak ada transaksi ditemukan.</td>
             </tr>
             <tr v-for="t in paginated" :key="t.id" class="hover:bg-gray-50 transition-all">
               <td class="px-5 py-3.5">
@@ -162,7 +161,6 @@
                 <span class="font-medium text-gray-600 block truncate">{{ t.oleh_tujuan }}</span>
                 <span class="truncate block text-[11px]" v-if="t.keterangan && t.keterangan !== '-'">{{ t.keterangan }}</span>
               </td>
-              <td class="px-4 py-3.5 text-gray-400 text-[12px] truncate max-w-[100px]">{{ t.petugas }}</td>
               <td class="px-4 py-3.5 text-center">
                 <button @click="showDetail(t)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-500 transition-all border-0 bg-transparent cursor-pointer mx-auto" title="Lihat Detail">
                   <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
@@ -175,6 +173,12 @@
 
       <!-- Pagination & info -->
       <div class="flex items-center justify-between px-5 py-3.5 border-t border-gray-100">
+        <select v-model.number="perPage" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 outline-none focus:border-indigo-400 bg-white cursor-pointer">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+        </select>
         <p class="text-xs text-gray-400 m-0">Menampilkan {{ from }}–{{ to }} dari {{ filtered.length }} data</p>
         <div class="flex items-center gap-1">
           <button @click="page--" :disabled="page === 1"
@@ -250,6 +254,7 @@ export default {
     filterLokasi()    { this.fetchData() },
     filterKategori()  { this.fetchData() },
     filterJenis()     { this.fetchData() },
+    perPage()         { this.page = 1 },
   },
   mounted() {
     this.fetchOptions()
@@ -369,10 +374,6 @@ export default {
           <div class="flex justify-between border-b pb-2">
             <span class="font-semibold text-gray-500">Jumlah</span>
             <span class="${qtyClass} font-bold">${qtyPrefix}${t.qty} ${t.satuan}</span>
-          </div>
-          <div class="flex justify-between border-b pb-2">
-            <span class="font-semibold text-gray-500">Petugas</span>
-            <span>${t.petugas}</span>
           </div>
           <div class="pt-2">
             <span class="font-semibold text-gray-500 block mb-1">Keterangan:</span>

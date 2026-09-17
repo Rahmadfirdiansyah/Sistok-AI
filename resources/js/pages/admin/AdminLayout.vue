@@ -324,6 +324,7 @@ export default {
         { to: '/admin/laporan-stok', label: 'Laporan Stok' },
         { to: '/admin/laporan-masuk', label: 'Laporan Masuk' },
         { to: '/admin/laporan-keluar', label: 'Laporan Keluar' },
+        { to: '/admin/laporan-limbah', label: 'Laporan Limbah' },
         { to: '/admin/laporan-transaksi', label: 'Riwayat Transaksi' },
       ],
 

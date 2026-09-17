@@ -53,12 +53,12 @@
                 <td class="px-5 py-3 font-medium text-gray-700 text-[13px]">{{ r.name }}</td>
                 <td class="px-4 py-3 text-gray-400 text-[12.5px]">{{ r.cat }}</td>
                 <td class="px-4 py-3 text-gray-400 text-[12.5px]">{{ r.lokasi }}</td>
-                <td class="px-4 py-3 font-bold text-[13px]" :class="r.stok < 5 ? 'text-red-500' : 'text-yellow-500'">{{
+                <td class="px-4 py-3 font-bold text-[13px]" :class="r.stok <= 0 ? 'text-red-500' : 'text-yellow-500'">{{
                   r.stok }} {{ r.unit }}</td>
                 <td class="px-4 py-3">
                   <span class="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                    :class="r.stok < 5 ? 'bg-red-50 text-red-500' : 'bg-yellow-50 text-yellow-600'">
-                    {{ r.stok < 5 ? 'Kritis' : 'Rendah' }} </span>
+                    :class="r.stok <= 0 ? 'bg-red-50 text-red-500' : 'bg-yellow-50 text-yellow-600'">
+                    {{ r.stok <= 0 ? 'Habis' : 'Rendah' }} </span>
                 </td>
               </tr>
             </tbody>
@@ -74,13 +74,13 @@
             <div class="flex justify-between items-start">
               <h3 class="font-medium text-gray-700 text-[13.5px] m-0">{{ r.name }}</h3>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
-                :class="r.stok < 5 ? 'bg-red-50 text-red-500' : 'bg-yellow-50 text-yellow-600'">
-                {{ r.stok < 5 ? 'Kritis' : 'Rendah' }} 
+                :class="r.stok <= 0 ? 'bg-red-50 text-red-500' : 'bg-yellow-50 text-yellow-600'">
+                {{ r.stok <= 0 ? 'Habis' : 'Rendah' }} 
               </span>
             </div>
             <div class="flex justify-between items-end">
               <p class="text-gray-400 text-[11.5px] m-0">{{ r.cat }} • {{ r.lokasi }}</p>
-              <p class="font-bold text-[13px] m-0" :class="r.stok < 5 ? 'text-red-500' : 'text-yellow-500'">
+              <p class="font-bold text-[13px] m-0" :class="r.stok <= 0 ? 'text-red-500' : 'text-yellow-500'">
                 {{ r.stok }} {{ r.unit }}
               </p>
             </div>
@@ -217,7 +217,7 @@ export default {
         path: `<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>`,
       },
       {
-        label: 'Stok Kritis', value: '-', change: 'Perlu restock', route: '/admin/laporan-stok',
+        label: 'Stok Habis / Rendah', value: '-', change: 'Perlu restock', route: '/admin/laporan-stok',
         iconBg: 'bg-red-50', iconColor: 'text-red-500',
         badgeCls: 'bg-red-50 text-red-500',
         path: `<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>`,

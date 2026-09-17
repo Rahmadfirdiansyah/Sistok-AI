@@ -23,19 +23,27 @@ class LaporanPdfController extends Controller
             $query->whereHas('kategori', fn($q) => $q->where('nama', $request->kategori));
         }
 
+        if ($request->filled('lokasi')) {
+            $query->whereHas('lokasi', fn($q) => $q->where('nama', $request->lokasi));
+        }
+
+        if ($request->filled('satuan')) {
+            $query->whereHas('satuan', fn($q) => $q->where('nama', $request->satuan));
+        }
+
         if ($request->filled('status')) {
             $status = $request->status;
-            if ($status === 'kritis') {
-                $query->whereRaw('stok < min_stok / 2');
+            if ($status === 'habis' || $status === 'kritis') {
+                $query->where('stok', '<=', 0);
             } elseif ($status === 'rendah') {
-                $query->whereRaw('stok >= min_stok / 2 AND stok < min_stok');
+                $query->whereRaw('stok > 0 AND stok < min_stok');
             } elseif ($status === 'aman') {
                 $query->whereRaw('stok >= min_stok');
             }
         }
 
         $barangs = $query->orderBy('kode')->get()->map(function ($b) {
-            $statusKey = $b->stok < $b->min_stok / 2 ? 'Kritis' : ($b->stok < $b->min_stok ? 'Rendah' : 'Aman');
+            $statusKey = $b->stok <= 0 ? 'Habis' : ($b->stok < $b->min_stok ? 'Rendah' : 'Aman');
             return [
                 'kode'     => $b->kode,
                 'nama'     => $b->nama,
@@ -54,6 +62,8 @@ class LaporanPdfController extends Controller
             'waktu'     => Carbon::now()->format('H:i'),
             'filter'    => [
                 'kategori' => $request->kategori ?? 'Semua',
+                'lokasi'   => $request->lokasi ?? 'Semua',
+                'satuan'   => $request->satuan ?? 'Semua',
                 'status'   => $request->status ?? 'Semua',
             ],
         ]);
@@ -248,5 +258,47 @@ class LaporanPdfController extends Controller
         $pdf->setPaper('A4', 'portrait');
 
         return $pdf->stream('laporan-riwayat-transaksi-' . date('Ymd') . '.pdf');
+    }
+
+    /**
+     * Cetak PDF Laporan Limbah & Barang Rusak
+     */
+    public function limbah(Request $request)
+    {
+        $query = BarangKeluar::with(['barang.kategori', 'barang.satuan'])
+            ->where('jenis_keluar', 'limbah');
+
+        if ($request->filled('kategori')) {
+            $query->whereHas('barang.kategori', fn($q) => $q->where('nama', $request->kategori));
+        }
+
+        $allLimbah = $query->orderBy('tanggal', 'desc')->get();
+
+        $limbahs = $allLimbah->groupBy('barang_id')->map(function ($items) {
+            $first = $items->first();
+            $barang = $first->barang;
+
+            return [
+                'kode'            => $barang->kode ?? '-',
+                'nama'            => $barang->nama ?? 'Barang Dihapus',
+                'kategori'        => $barang->kategori->nama ?? '-',
+                'satuan'          => $barang->satuan->nama ?? 'unit',
+                'total_limbah'    => $items->sum('jumlah'),
+                'terakhir_dibuang' => Carbon::parse($items->max('tanggal'))->format('d/m/Y'),
+            ];
+        })->values();
+
+        $pdf = Pdf::loadView('laporan.limbah', [
+            'limbahs' => $limbahs,
+            'tanggal' => Carbon::now()->translatedFormat('d F Y'),
+            'waktu'   => Carbon::now()->format('H:i'),
+            'filter'  => [
+                'kategori' => $request->kategori ?? 'Semua',
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream('laporan-limbah-' . date('Ymd') . '.pdf');
     }
 }

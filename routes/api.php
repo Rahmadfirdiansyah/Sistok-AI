@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\LaporanPdfController;
 use App\Http\Controllers\Api\LaporanExcelController;
 use App\Http\Controllers\Api\LaporanTransaksiController;
+use App\Http\Controllers\Api\LaporanLimbahController;
 use App\Http\Controllers\Api\AiTransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,18 +45,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Laporan JSON
     Route::get('laporan/transaksi', [LaporanTransaksiController::class, 'index']);
+    Route::get('laporan/limbah',    [LaporanLimbahController::class, 'index']);
 
     // Laporan PDF
     Route::get('laporan/stok/pdf',   [LaporanPdfController::class, 'stok']);
     Route::get('laporan/masuk/pdf',  [LaporanPdfController::class, 'masuk']);
     Route::get('laporan/keluar/pdf', [LaporanPdfController::class, 'keluar']);
     Route::get('laporan/transaksi/pdf', [LaporanPdfController::class, 'riwayatTransaksi']);
+    Route::get('laporan/limbah/pdf',    [LaporanPdfController::class, 'limbah']);
 
     // Laporan Excel
     Route::get('laporan/stok/excel',   [LaporanExcelController::class, 'stok']);
     Route::get('laporan/masuk/excel',  [LaporanExcelController::class, 'masuk']);
     Route::get('laporan/keluar/excel', [LaporanExcelController::class, 'keluar']);
     Route::get('laporan/transaksi/excel', [LaporanExcelController::class, 'riwayatTransaksi']);
+    Route::get('laporan/limbah/excel',    [LaporanExcelController::class, 'limbah']);
 
     // User Management (Protected in Controller)
     Route::apiResource('users', \App\Http\Controllers\Api\UserController::class);

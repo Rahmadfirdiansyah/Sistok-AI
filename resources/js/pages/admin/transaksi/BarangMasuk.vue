@@ -66,13 +66,12 @@
               <th class="text-center px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Qty Masuk</th>
               <th class="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Tanggal</th>
               <th class="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Keterangan</th>
-              <th class="text-left px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Petugas</th>
               <th class="text-center px-4 py-3.5 text-[11px] font-bold text-gray-400 uppercase tracking-wide">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
             <tr v-if="paginated.length === 0 && !loading">
-              <td colspan="8" class="text-center py-12 text-gray-400 text-sm">Tidak ada data ditemukan.</td>
+              <td colspan="7" class="text-center py-12 text-gray-400 text-sm">Tidak ada data ditemukan.</td>
             </tr>
             <tr v-for="(b, idx) in paginated" :key="b.id" class="hover:bg-gray-50 transition-all">
               <td class="px-5 py-3.5 text-gray-400 text-[12.5px]">{{ (page - 1) * perPage + idx + 1 }}</td>
@@ -92,7 +91,6 @@
               </td>
               <td class="px-4 py-3.5 text-gray-500 text-[12.5px]">{{ b.tanggal }}</td>
               <td class="px-4 py-3.5 text-gray-400 text-[12.5px] max-w-xs truncate">{{ b.keterangan || '-' }}</td>
-              <td class="px-4 py-3.5 text-gray-400 text-[12px] truncate max-w-[100px]">{{ b.petugas }}</td>
               <td class="px-4 py-3.5">
                 <div class="flex items-center justify-center gap-1.5">
                   <button v-if="isStaff" @click="openModal(b)" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-indigo-50 text-gray-400 hover:text-indigo-500 transition-all border-0 bg-transparent cursor-pointer" title="Lihat Detail">
@@ -152,15 +150,9 @@
               <span class="text-gray-400 block text-[10px] uppercase font-semibold">Tanggal</span>
               <span class="font-medium text-gray-700">{{ b.tanggal }}</span>
             </div>
-            <div class="col-span-2 grid grid-cols-2 gap-2 mt-1">
-              <div>
-                <span class="text-gray-400 block text-[10px] uppercase font-semibold">Keterangan</span>
-                <span class="font-medium text-gray-700 truncate max-w-[120px] inline-block">{{ b.keterangan || '-' }}</span>
-              </div>
-              <div class="text-right">
-                <span class="text-gray-400 block text-[10px] uppercase font-semibold">Petugas</span>
-                <span class="font-medium text-gray-700">{{ b.petugas }}</span>
-              </div>
+            <div class="col-span-2 mt-1">
+              <span class="text-gray-400 block text-[10px] uppercase font-semibold">Keterangan</span>
+              <span class="font-medium text-gray-700 truncate max-w-full inline-block">{{ b.keterangan || '-' }}</span>
             </div>
           </div>
 
@@ -184,6 +176,12 @@
 
       <!-- Shared Responsive Pagination -->
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3.5 border-t border-gray-100 bg-white">
+        <select v-model.number="perPage" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 outline-none focus:border-indigo-400 bg-white cursor-pointer">
+          <option :value="10">10</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+        </select>
         <p class="text-xs text-gray-400 m-0">Menampilkan {{ from }}–{{ to }} dari {{ filtered.length }} data</p>
         <div class="flex items-center gap-1">
           <button @click="page--" :disabled="page === 1"
@@ -281,7 +279,7 @@ export default {
     filterTanggal: '',
     filterLokasi: '',
     page: 1,
-    perPage: 8,
+    perPage: 10,
     modal: false,
     form: {},
     lokasis: [],
@@ -340,6 +338,7 @@ export default {
     search() { this.page = 1 },
     filterTanggal() { this.page = 1 },
     filterLokasi() { this.page = 1 },
+    perPage() { this.page = 1 },
     'form.barang_id'(newVal) {
       if (newVal) {
         const selected = this.daftarBarang.find(b => b.id === newVal)

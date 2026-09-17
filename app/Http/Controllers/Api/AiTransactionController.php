@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Barang;
 use App\Models\Lokasi;
 use App\Models\Kategori;
+use App\Models\Satuan;
 use App\Models\BarangMasuk;
 use App\Models\BarangKeluar;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class AiTransactionController extends Controller
     public function parseChat(Request $request)
     {
         $rawText = trim($request->input('text', ''));
+        $history = $request->input('history', []);
         $lowerText = strtolower($rawText);
 
         // Easter egg
@@ -30,7 +32,7 @@ class AiTransactionController extends Controller
         }
 
         // Try Gemini API first if configured
-        $geminiResult = $this->parseWithGemini($rawText);
+        $geminiResult = $this->parseWithGemini($rawText, $history);
 
         if ($geminiResult && isset($geminiResult['intent'])) {
             return $this->handleGeminiResponse($geminiResult, $rawText);
@@ -41,9 +43,9 @@ class AiTransactionController extends Controller
     }
 
     /**
-     * Integrasi Google AI Studio (Gemini API) dengan Multi-Model Fallback & Context Injection
+     * Integrasi Google AI Studio (Gemini API) dengan Multi-Model Fallback, Multi-turn Context & Context Injection
      */
-    protected function parseWithGemini(string $rawText): ?array
+    protected function parseWithGemini(string $rawText, array $history = []): ?array
     {
         $apiKey = env('GEMINI_API_KEY');
         if (empty($apiKey)) {
@@ -51,8 +53,8 @@ class AiTransactionController extends Controller
         }
 
         $models = array_values(array_unique(array_filter([
-            env('GEMINI_MODEL', 'gemini-3.6-flash'),
             'gemini-3.6-flash',
+            env('GEMINI_MODEL', 'gemini-flash-latest'),
             'gemini-flash-latest'
         ])));
 
@@ -89,8 +91,8 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
 
 1. 'masuk': Penambahan/retur/pengembalian stok barang.
    Schema: {\"intent\": \"masuk\", \"barang_id\": <number>, \"qty\": <number>, \"keterangan\": <string>}
-2. 'keluar': Pengurangan/pemakaian stok barang.
-   Schema: {\"intent\": \"keluar\", \"barang_id\": <number>, \"qty\": <number>, \"dipakai_oleh\": <string>, \"tujuan\": <string>, \"keterangan\": <string>}
+2. 'keluar': Pengurangan/pemakaian stok barang. Jika pengguna menyebut barang rusak, limbah, atau afkir, set jenis_keluar: 'limbah', jika pemakaian biasa set jenis_keluar: 'pemakaian'.
+   Schema: {\"intent\": \"keluar\", \"barang_id\": <number>, \"qty\": <number>, \"dipakai_oleh\": <string>, \"tujuan\": <string>, \"jenis_keluar\": <string: \"pemakaian\"|\"limbah\">, \"keterangan\": <string>}
 3. 'info': Menanyakan sisa stok barang tertentu.
    Schema: {\"intent\": \"info\", \"barang_id\": <number>}
 4. 'new_item': Pendaftaran barang baru yang jelas BELUM ada di daftar barang saat ini.
@@ -117,24 +119,65 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
 - Selalu utamakan mencocokkan nama barang dari pesan pengguna dengan 'id' barang yang ada di DAFTAR BARANG.
 - Jika intent 'keluar', ekstrak siapa yang memakai ('dipakai_oleh') dan tujuannya ('tujuan') jika ada di teks pengguna.";
 
+        // Siapkan struktur percakapan bertingkat (multi-turn)
+        $contents = [];
+        if (!empty($history) && is_array($history)) {
+            // Ambil maksimal 6 pesan terakhir (3 putaran percakapan)
+            $recentHistory = array_slice($history, -6);
+            $lastRole = null;
+            foreach ($recentHistory as $msg) {
+                $role = ($msg['role'] ?? '') === 'model' ? 'model' : 'user';
+                $text = trim($msg['text'] ?? '');
+                if ($text === '') continue;
+
+                // Gemini mewajibkan role bergantian secara ketat (user -> model -> user)
+                if ($role === $lastRole) {
+                    $lastIdx = count($contents) - 1;
+                    $contents[$lastIdx]['parts'][0]['text'] .= "\n" . $text;
+                } else {
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [['text' => $text]]
+                    ];
+                    $lastRole = $role;
+                }
+            }
+
+            // Jika item terakhir dari riwayat adalah user, gabungkan dengan teks saat ini
+            if ($lastRole === 'user') {
+                $lastIdx = count($contents) - 1;
+                $contents[$lastIdx]['parts'][0]['text'] .= "\n" . $rawText;
+            } else {
+                $contents[] = [
+                    'role' => 'user',
+                    'parts' => [['text' => $rawText]]
+                ];
+            }
+        } else {
+            $contents = [
+                [
+                    'role' => 'user',
+                    'parts' => [['text' => $rawText]]
+                ]
+            ];
+        }
+
+        $payload = [
+            'systemInstruction' => [
+                'parts' => [['text' => $systemPrompt]]
+            ],
+            'contents' => $contents,
+            'generationConfig' => [
+                'responseMimeType' => 'application/json',
+                'temperature' => 0.2
+            ]
+        ];
+
         foreach ($models as $model) {
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
             try {
-                $response = Http::timeout(10)->post($url, [
-                    'contents' => [
-                        [
-                            'role' => 'user',
-                            'parts' => [
-                                ['text' => $systemPrompt . "\n\nPesan Pengguna: " . $rawText]
-                            ]
-                        ]
-                    ],
-                    'generationConfig' => [
-                        'responseMimeType' => 'application/json',
-                        'temperature' => 0.2
-                    ]
-                ]);
+                $response = Http::timeout(15)->post($url, $payload);
 
                 if ($response->successful()) {
                     $jsonResponse = $response->json();
@@ -272,7 +315,8 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
                     'satuan' => $barang->satuan ? $barang->satuan->nama : 'unit',
                     'keterangan' => $res['keterangan'] ?? 'Dicatat via Gemini AI',
                     'dipakai_oleh' => $res['dipakai_oleh'] ?? '-',
-                    'tujuan' => $res['tujuan'] ?? '-'
+                    'tujuan' => $res['tujuan'] ?? '-',
+                    'jenis_keluar' => $res['jenis_keluar'] ?? (preg_match('/(?:rusak|limbah|afkir)/i', $rawText) ? 'limbah' : 'pemakaian')
                 ]
             ]);
         }
@@ -375,8 +419,10 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
                 $namaBarang = trim($n[1]);
             }
 
-            $lokasiId = 1;
-            $kategoriId = 12;
+            $defaultLoc = Lokasi::first();
+            $defaultKat = Kategori::first();
+            $lokasiId = $defaultLoc ? $defaultLoc->id : 1;
+            $kategoriId = $defaultKat ? $defaultKat->id : 1;
 
             if ($lokasiName) {
                 $loc = Lokasi::where('nama', 'like', "%{$lokasiName}%")->first();
@@ -622,14 +668,36 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
             $request->validate([
                 'nama_barang' => 'required|string|max:255',
                 'lokasi_id' => 'required|integer',
-                'kategori_id' => 'required|integer'
+                'kategori_id' => 'required|integer',
+                'satuan_id' => 'nullable|integer'
             ]);
+
+            // Dynamically resolve Satuan ID
+            $satuanId = $request->satuan_id;
+            if (!$satuanId || !Satuan::where('id', $satuanId)->exists()) {
+                $pcsSatuan = Satuan::where('nama', 'like', '%pcs%')->first() ?? Satuan::first();
+                $satuanId = $pcsSatuan ? $pcsSatuan->id : 1;
+            }
+
+            // Ensure Lokasi ID exists
+            $lokasiId = $request->lokasi_id;
+            if (!Lokasi::where('id', $lokasiId)->exists()) {
+                $defaultLoc = Lokasi::first();
+                $lokasiId = $defaultLoc ? $defaultLoc->id : 1;
+            }
+
+            // Ensure Kategori ID exists
+            $kategoriId = $request->kategori_id;
+            if (!Kategori::where('id', $kategoriId)->exists()) {
+                $defaultKat = Kategori::first();
+                $kategoriId = $defaultKat ? $defaultKat->id : 1;
+            }
 
             $barang = Barang::create([
                 'nama' => $request->nama_barang,
-                'kategori_id' => $request->kategori_id,
-                'satuan_id' => 12, // Asumsi 12 adalah Pcs / default
-                'lokasi_id' => $request->lokasi_id,
+                'kategori_id' => $kategoriId,
+                'satuan_id' => $satuanId,
+                'lokasi_id' => $lokasiId,
                 'stok' => 0,
                 'min_stok' => 0,
                 'user_id' => auth()->id()
@@ -674,17 +742,19 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
             'qty' => 'required|integer|min:1',
             'keterangan' => 'nullable|string',
             'dipakai_oleh' => 'nullable|string',
-            'tujuan' => 'nullable|string'
+            'tujuan' => 'nullable|string',
+            'jenis_keluar' => 'nullable|string|in:pemakaian,limbah'
         ]);
 
         $keterangan = $request->input('keterangan', 'Dicatat otomatis oleh Sistok AI');
         $dipakaiOleh = $request->input('dipakai_oleh', '-');
         $tujuan = $request->input('tujuan', '-');
+        $jenisKeluar = $request->input('jenis_keluar', 'pemakaian');
 
         $barang = Barang::findOrFail($request->barang_id);
         $lokasi = Lokasi::firstOrCreate(['nama' => 'Gudang Utama']);
 
-        DB::transaction(function () use ($request, $barang, $lokasi, $keterangan, $dipakaiOleh, $tujuan) {
+        DB::transaction(function () use ($request, $barang, $lokasi, $keterangan, $dipakaiOleh, $tujuan, $jenisKeluar) {
             if ($request->action === 'masuk') {
                 BarangMasuk::create([
                     'tanggal' => date('Y-m-d'),
@@ -707,6 +777,7 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
                     'jumlah' => $request->qty,
                     'dipakai_oleh' => $dipakaiOleh,
                     'tujuan' => $tujuan,
+                    'jenis_keluar' => $jenisKeluar,
                     'keterangan' => $keterangan,
                     'user_id' => auth()->id()
                 ]);
