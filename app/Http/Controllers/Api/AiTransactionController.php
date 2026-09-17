@@ -39,7 +39,15 @@ class AiTransactionController extends Controller
         }
 
         // Fallback to local Regex parsing engine if Gemini API key is missing
-        return $this->parseWithRegex($rawText, $lowerText);
+        $regexResult = $this->parseWithRegex($rawText, $lowerText);
+        if ($regexResult) {
+            return $regexResult;
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Format pesan belum dikenali. Coba gunakan contoh perintah transaksi seperti di atas.'
+        ]);
     }
 
     /**
@@ -53,8 +61,9 @@ class AiTransactionController extends Controller
         }
 
         $models = array_values(array_unique(array_filter([
+            env('GEMINI_MODEL', 'gemini-3.6-flash'),
             'gemini-3.6-flash',
-            env('GEMINI_MODEL', 'gemini-flash-latest'),
+            'gemini-3.7-flash',
             'gemini-flash-latest'
         ])));
 
@@ -177,7 +186,7 @@ Kamu HARUS selalu menjawab dengan JSON murni tanpa pembungkus markdown. Skema JS
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
             try {
-                $response = Http::timeout(15)->post($url, $payload);
+                $response = Http::withoutVerifying()->timeout(15)->post($url, $payload);
 
                 if ($response->successful()) {
                     $jsonResponse = $response->json();

@@ -248,11 +248,12 @@ export default {
             });
           }
         } else {
+          const msg = response.data?.message || 'Format pesan belum dikenali.';
           this.messages.push({
             isUser: false,
-            text: response.data.is_easter_egg 
-              ? `<b style="color: #8b5cf6;">Rahasia AI:</b><br>${response.data.message}` 
-              : (response.data.is_html ? response.data.message : `Maaf, saya tidak mengerti. ${response.data.message}`)
+            text: response.data?.is_easter_egg 
+              ? `<b style="color: #8b5cf6;">Rahasia AI:</b><br>${msg}` 
+              : (response.data?.is_html ? msg : `Maaf, saya tidak mengerti. ${msg}`)
           });
         }
       } catch (error) {
