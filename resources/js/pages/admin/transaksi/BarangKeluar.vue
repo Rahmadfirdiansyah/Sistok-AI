@@ -40,8 +40,14 @@
       </button>
       <input v-model="filterTanggal" type="date"
         class="col-span-6 sm:w-auto px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-white" />
-      <select v-model="filterLokasi"
+      <select v-model="filterJenis"
         class="col-span-6 sm:w-auto px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-white">
+        <option value="">Semua Jenis</option>
+        <option value="pemakaian">🛠️ Pemakaian</option>
+        <option value="limbah">🗑️ Limbah</option>
+      </select>
+      <select v-model="filterLokasi"
+        class="col-span-12 sm:w-auto px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all bg-white">
         <option value="">Semua Lokasi</option>
         <option v-for="l in lokasis" :key="l" :value="l">{{ l }}</option>
       </select>
@@ -340,6 +346,7 @@ export default {
     searchInput: '',
     search: '',
     filterTanggal: '',
+    filterJenis: '',
     filterLokasi: '',
     page: 1,
     perPage: 10,
@@ -377,8 +384,9 @@ export default {
         const q = this.search.toLowerCase()
         const matchQ = !q || t.barang.toLowerCase().includes(q) || t.dipakaiOleh.toLowerCase().includes(q) || t.tujuan.toLowerCase().includes(q) || t.kodeBarang.toLowerCase().includes(q)
         const matchT = !this.filterTanggal || t.tanggal === this.filterTanggal
+        const matchJ = !this.filterJenis || (t.jenisKeluar || 'pemakaian') === this.filterJenis
         const matchL = !this.filterLokasi || t.lokasi === this.filterLokasi
-        return matchQ && matchT && matchL
+        return matchQ && matchT && matchJ && matchL
       })
     },
     totalPages() { return Math.max(1, Math.ceil(this.filtered.length / this.perPage)) },
@@ -407,6 +415,7 @@ export default {
     },
     search() { this.page = 1 },
     filterTanggal() { this.page = 1 },
+    filterJenis() { this.page = 1 },
     filterLokasi() { this.page = 1 },
     perPage() { this.page = 1 },
     'form.barang_id'(newVal) {
@@ -456,6 +465,7 @@ export default {
       this.searchInput = ''
       this.search = ''
       this.filterTanggal = ''
+      this.filterJenis = ''
       this.filterLokasi = ''
       this.fetchData()
     },
